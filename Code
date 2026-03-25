@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Track Workout</title>
+    <style>
+        /* CSS STYLES */
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #121212 url('gym-background.jpg') no-repeat center center fixed; background-size: cover; color: white; }
+        .background-overlay { background: rgba(0, 0, 0, 0.8); min-height: 100vh; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 450px; }
+        h1 { text-align: center; color: #00ff88; letter-spacing: 2px; }
+        .card { background: rgba(30, 30, 30, 0.95); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #timer-display { font-size: 3.5rem; text-align: center; color: #00ff88; font-family: monospace; margin: 10px 0; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        .input-row { display: flex; gap: 10px; }
+        button { width: 100%; padding: 12px; background: #00ff88; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        .secondary { background: transparent; border: 1px solid #ff4444; color: #ff4444; margin-top: 15px; }
+        .workout-item { background: #252525; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 5px solid #00ff88; }
+    </style>
+</head>
+<body>
+    <div class="background-overlay">
+        <div class="container">
+            <h1>PRO-TRACK</h1>
+            
+            <div class="card">
+                <div id="timer-display">01:00</div>
+                <div class="input-row">
+                    <button onclick="startTimer(30)">30s</button>
+                    <button onclick="startTimer(60)">60s</button>
+                    <button onclick="resetTimer()" style="background:#444; color:white;">Reset</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <input type="text" id="exercise-input" placeholder="Exercise Name">
+                <div class="input-row">
+                    <input type="number" id="sets" placeholder="Sets">
+                    <input type="number" id="reps" placeholder="Reps">
+                </div>
+                <select id="rest-select">
+                    <option value="30">Rest: 30s</option>
+                    <option value="60" selected>Rest: 60s</option>
+                    <option value="90">Rest: 90s</option>
+                </select>
+                <button id="add-btn">LOG SET & START REST</button>
+            </div>
+
+            <div id="workout-list"></div>
+            <button id="clear-btn" class="secondary">CLEAR ALL DATA</button>
+        </div>
+    </div>
+
+    <script>
+        // JAVASCRIPT LOGIC
+        let workouts = JSON.parse(localStorage.getItem('myWorkouts')) || [];
+        let countdown;
+        const list = document.getElementById('workout-list');
+
+        function render() {
+            list.innerHTML = workouts.map(item => `
+                <div class="workout-item">
+                    <span><strong>${item.name}</strong></span>
+                    <span>${item.sets} x ${item.reps}</span>
+                </div>
+            `).join('');
+            localStorage.setItem('myWorkouts', JSON.stringify(workouts));
+        }
+
+        document.getElementById('add-btn').onclick = () => {
+            const name = document.getElementById('exercise-input').value;
+            const s = document.getElementById('sets').value;
+            const r = document.getElementById('reps').value;
+            const rest = document.getElementById('rest-select').value;
+
+            if(name && s && r) {
+                workouts.unshift({name, sets: s, reps: r});
+                render();
+                startTimer(parseInt(rest));
+            }
+        };
+
+        function startTimer(seconds) {
+            clearInterval(countdown);
+            let time = seconds;
+            countdown = setInterval(() => {
+                const m = Math.floor(time / 60);
+                const s = time % 60;
+                document.getElementById('timer-display').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+                if(time <= 0) {
+                    clearInterval(countdown);
+                    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+                }
+                time--;
+            }, 1000);
+        }
+
+        function resetTimer() { clearInterval(countdown); document.getElementById('timer-display').textContent = "01:00"; }
+        document.getElementById('clear-btn').onclick = () => { workouts = []; render(); };
+        render();
+    </script>
+</body>
+</html>
